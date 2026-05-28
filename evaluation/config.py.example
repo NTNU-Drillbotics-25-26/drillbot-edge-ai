@@ -1,0 +1,15 @@
+"""Configuration template for evaluation system.
+
+Copy this file to config.py and fill in your API keys.
+config.py is gitignored and should never be committed.
+"""
+
+# OpenAI API key (get from https://platform.openai.com/api-keys)
+OPENAI_API_KEY = "sk-..."
+
+# Raspberry Pi connection settings
+PI_HOST = "10.22.60.223"
+PI_OLLAMA_PORT = 11434
+
+# Local Ollama settings
+LOCAL_OLLAMA_URL = "http://localhost:11434/api/generate"

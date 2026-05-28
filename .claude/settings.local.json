@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(Invoke-RestMethod -Uri \"http://10.22.60.223:8000/health\" -TimeoutSec 10)",
+      "Bash(python -m scripts.benchmark:*)",
+      "Bash(python:*)",
+      "Skill(markitdown)",
+      "Bash(if exist Drillbot_Test_Report.xlsx del Drillbot_Test_Report.xlsx)",
+      "Bash(for q in \"How do I enable rotation?\" \"How do I set constant ROP?\" \"How can I see the coordinates I have set?\" \"Are we on the right path?\")",
+      "Bash(do)",
+      "Bash(echo:*)",
+      "Bash(echo \"{\"\"question\"\": \"\"$q\"\"}\")",
+      "Bash(done)",
+      "Bash(for q in \"How do I enable rotation?\" \"How do I set constant ROP?\" \"Are we on the right path?\")",
+      "Bash(where:*)",
+      "Bash(dir:*)",
+      "Bash(cmd /c:*)",
+      "Bash(pip install:*)",
+      "Bash(ollama pull:*)",
+      "Bash(ollama list:*)",
+      "Bash(pip show:*)",
+      "Bash(netstat:*)",
+      "Bash(pkill:*)",
+      "Bash(cd:*)",
+      "Bash(wc -l:*)",
+      "Bash(findstr:*)"
+    ]
+  }
+}

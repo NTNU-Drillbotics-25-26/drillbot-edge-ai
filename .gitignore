@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Evaluation system (not deployed to Pi)
+evaluation/config.py
+evaluation/results/*.json
+evaluation/results/*.csv
+!evaluation/results/.gitkeep
+
+# Secrets
+.env
+*.env
+credentials.json
+
+# OS
+.DS_Store
+Thumbs.db
+NUL
+
+# Logs
+*.log
+drillbot.log
+
+# Documents (thesis PDFs are large - copy separately to Pi)
+documents/
+
+# Keep chroma embeddings (34MB - pre-computed, saves re-ingestion on Pi)
+# Remove this line if you want to re-ingest on Pi instead
+# data/chroma/

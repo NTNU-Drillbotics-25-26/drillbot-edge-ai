@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Evaluation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #fafafa;
+      --text: #1a1a1a;
+      --muted: #666;
+      --border: #e0e0e0;
+      --accent: #c45d35;
+      --card: #fff;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 60px 40px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .saved-count {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .input-section { margin-bottom: 48px; }
+
+    .question-input {
+      width: 100%;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 24px;
+      padding: 20px 0;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+      outline: none;
+    }
+
+    .question-input:focus { border-color: var(--text); }
+    .question-input::placeholder { color: #bbb; }
+
+    .controls {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .providers {
+      display: flex;
+      gap: 20px;
+    }
+
+    .provider-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .provider-toggle input { display: none; }
+
+    .provider-toggle .check {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .provider-toggle input:checked + .check {
+      background: var(--text);
+      border-color: var(--text);
+    }
+
+    .provider-toggle input:checked + .check::after {
+      content: '';
+      width: 10px;
+      height: 6px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .provider-toggle span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .provider-toggle:hover span { color: var(--text); }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ccc;
+      margin-left: 4px;
+      display: inline-block;
+    }
+
+    .status-dot.available { background: #4a4; }
+    .status-dot.unavailable { background: #c44; }
+
+    .mode-select select {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      padding: 10px 24px;
+      background: var(--text);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 11px;
+    }
+
+    .results { display: none; }
+    .results.visible { display: block; }
+
+    .responses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .response-card {
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .response-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .response-provider {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .response-meta {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .response-text {
+      font-size: 15px;
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    .response-error {
+      color: var(--accent);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .response-unavailable {
+      color: var(--muted);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .response-score {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .score-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .score-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: transparent;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .score-btn:hover { border-color: var(--text); }
+    .score-btn.selected {
+      background: var(--text);
+      border-color: var(--text);
+      color: #fff;
+    }
+
+    .retrieval-section {
+      padding: 24px;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .chunk { font-size: 14px; line-height: 1.7; }
+    .chunk-title { font-weight: 500; margin-bottom: 8px; }
+    .chunk-text { color: var(--muted); font-size: 13px; }
+    .chunk-secondary {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .chunk-score {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    .save-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .saved-msg {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: #4a4;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .saved-msg.visible { opacity: 1; }
+
+    .loading {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 40px;
+    }
+    .loading.visible { display: flex; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      margin-top: 80px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>RAG Evaluation</h1>
+      <span class="saved-count" id="saved-count"></span>
+    </header>
+
+    <section class="input-section">
+      <input type="text" class="question-input" id="question" placeholder="Ask a question..." autofocus>
+
+      <div class="controls">
+        <div class="providers">
+          <label class="provider-toggle">
+            <input type="checkbox" name="provider" value="local" checked>
+            <span class="check"></span>
+            <span>local<span class="status-dot" id="status-local"></span></span>
+          </label>
+          <label class="provider-toggle">
+            <input type="checkbox" name="provider" value="pi">
+            <span class="check"></span>
+            <span>pi<span class="status-dot" id="status-pi"></span></span>
+          </label>
+          <label class="provider-toggle">
+            <input type="checkbox" name="provider" value="openai" checked>
+            <span class="check"></span>
+            <span>openai<span class="status-dot" id="status-openai"></span></span>
+          </label>
+        </div>
+
+        <div class="mode-select">
+          <select id="mode">
+            <option value="fts">fts</option>
+            <option value="hybrid">hybrid</option>
+            <option value="embed">embed</option>
+          </select>
+        </div>
+
+        <div class="mode-select">
+          <select id="model"></select>
+        </div>
+
+        <button class="btn" id="submit">Evaluate</button>
+      </div>
+    </section>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span>Evaluating...</span>
+    </div>
+
+    <section class="results" id="results">
+      <div class="responses-grid" id="responses"></div>
+      <div class="save-row">
+        <button class="btn" id="save-btn">Save All</button>
+        <span class="saved-msg" id="saved-msg">Saved</span>
+      </div>
+      <div class="retrieval-section" id="retrieval"></div>
+    </section>
+
+    <footer>drillbot evaluation</footer>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+
+    let lastResult = null;
+    let scores = { local: null, pi: null, openai: null };
+
+    async function checkStatus() {
+      try {
+        const res = await fetch('/status');
+        const data = await res.json();
+        window.providerStatus = data;
+        for (const [name, info] of Object.entries(data)) {
+          const dot = $(`#status-${name}`);
+          if (dot) dot.className = `status-dot ${info.available ? 'available' : 'unavailable'}`;
+        }
+      } catch (e) {}
+    }
+
+    async function loadCount() {
+      try {
+        const res = await fetch('/results');
+        const data = await res.json();
+        $('#saved-count').textContent = `${data.length} saved`;
+      } catch (e) {}
+    }
+
+    async function loadModels() {
+      try {
+        const res = await fetch('/models');
+        const models = await res.json();
+        $('#model').innerHTML = models.map(m =>
+          `<option value="${m}" ${m === 'qwen2.5:1.5b' ? 'selected' : ''}>${m}</option>`
+        ).join('');
+      } catch (e) {}
+    }
+
+    async function evaluate() {
+      const question = $('#question').value.trim();
+      if (!question) return;
+
+      const mode = $('#mode').value;
+      const model = $('#model').value;
+
+      // Only query checked providers
+      const providers = [...$$('input[name="provider"]:checked')].map(el => el.value);
+      if (!providers.length) return;
+
+      $('#submit').disabled = true;
+      $('#loading').classList.add('visible');
+      $('#results').classList.remove('visible');
+      scores = { local: null, pi: null, openai: null };
+
+      try {
+        const res = await fetch('/eval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, providers, mode, model })
+        });
+        lastResult = await res.json();
+        lastResult.mode = mode;
+        lastResult.model = model;
+        renderResults(lastResult);
+      } catch (e) {
+        console.error('Evaluation failed:', e);
+      } finally {
+        $('#submit').disabled = false;
+        $('#loading').classList.remove('visible');
+      }
+    }
+
+    function renderResults(data) {
+      const names = { local: 'Local', pi: 'Pi', openai: 'OpenAI' };
+      const queried = Object.keys(data.responses);
+
+      $('#responses').innerHTML = queried.map(name => {
+        const r = data.responses[name];
+        const timeStr = r && !r.error && r.ms ? `${(r.ms / 1000).toFixed(1)}s` : '';
+
+        let content;
+        if (r.error === 'not available') {
+          content = `<div class="response-unavailable">Not available</div>`;
+        } else if (r.error) {
+          content = `<div class="response-error">${r.error}</div>`;
+        } else {
+          content = `<div class="response-text">${r.text}</div>`;
+        }
+
+        const scoreButtons = [1,2,3,4,5,6,7,8,9,10].map(n =>
+          `<button class="score-btn" data-provider="${name}" data-score="${n}">${n}</button>`
+        ).join('');
+
+        return `
+          <div class="response-card">
+            <div class="response-header">
+              <span class="response-provider">${names[name] || name}</span>
+              <span class="response-meta">${timeStr}</span>
+            </div>
+            ${content}
+            <div class="response-score">
+              <span class="score-label">Score</span>
+              <div class="score-buttons">${scoreButtons}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Retrieval
+      const chunks = data.retrieval.chunks;
+      const retrievalTime = (data.retrieval.ms / 1000).toFixed(2);
+      $('#retrieval').innerHTML = chunks.length ? `
+        <div class="section-label">Retrieved Context · ${retrievalTime}s</div>
+        ${chunks.map((c, i) => `
+          <div class="chunk ${i > 0 ? 'chunk-secondary' : ''}">
+            <div class="chunk-title">${c.title} <span class="chunk-score">${c.score}</span></div>
+            <div class="chunk-text">${c.text}</div>
+          </div>
+        `).join('')}
+      ` : `
+        <div class="section-label">Retrieved Context</div>
+        <div class="chunk-text">No relevant documentation found.</div>
+      `;
+
+      $('#results').classList.add('visible');
+    }
+
+    async function save() {
+      if (!lastResult) return;
+
+      try {
+        await fetch('/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: lastResult.question,
+            mode: lastResult.mode,
+            model: lastResult.model,
+            chunks: lastResult.retrieval.chunks,
+            retrieval_ms: lastResult.retrieval.ms,
+            responses: lastResult.responses,
+            scores: scores
+          })
+        });
+        $('#saved-msg').classList.add('visible');
+        setTimeout(() => $('#saved-msg').classList.remove('visible'), 2000);
+        loadCount();
+      } catch (e) {
+        console.error('Save failed:', e);
+      }
+    }
+
+    // Events
+    $('#submit').addEventListener('click', evaluate);
+    $('#question').addEventListener('keydown', e => {
+      if (e.key === 'Enter') evaluate();
+    });
+
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('score-btn')) {
+        const provider = e.target.dataset.provider;
+        const score = parseInt(e.target.dataset.score);
+        scores[provider] = score;
+
+        // Update UI
+        $$(`[data-provider="${provider}"]`).forEach(b => b.classList.remove('selected'));
+        e.target.classList.add('selected');
+      }
+    });
+
+    $('#save-btn').addEventListener('click', save);
+
+    // Init
+    checkStatus();
+    loadCount();
+    loadModels();
+  </script>
+</body>
+</html>
