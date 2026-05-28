@@ -34,7 +34,7 @@ MODEL_NAME = "qwen2.5:1.5b"
 # Ollama options - low temperature reduces hallucination
 OLLAMA_OPTIONS = {
     "temperature": 0.1,  # Very low = more deterministic, less creative/hallucinatory
-    "num_predict": 80,  # Keep answers concise
+    "num_predict": 200,  # Max tokens in response
     "num_ctx": 2048,
     "num_thread": 4,     # Pi 5 has 4 cores
 }
