@@ -90,13 +90,10 @@ This document describes all alarms that may appear on the alarm panel (left moni
 
 **Meaning:** Measured weight on bit has exceeded the safety threshold.
 
-**Trigger condition:** `WOB > 30.0 kN` (configurable threshold in GUI).
+**Trigger condition:** `WOB > 50.0 kg`.
 
-**Actions:**
+**Action:**
 1. Reduce WOB immediately to safe operating range
-2. Check for bit wear or formation change
-3. Review WOB limits in system settings
-4. Inspect bit condition if alarm recurs
 
 ---
 
@@ -104,7 +101,7 @@ This document describes all alarms that may appear on the alarm panel (left moni
 
 **Meaning:** Excessive torsional energy stored in the drill string, typically caused by the sensor cable winding around the pipe.
 
-**Trigger condition:** `isRodWindup > 0.5` (signal from low-level system).
+**Trigger condition:** `isRodWindup > 0.5` (signal from control system).
 
 **Actions:**
 1. Stop drilling
@@ -132,13 +129,12 @@ This document describes all alarms that may appear on the alarm panel (left moni
 
 **Meaning:** A change in formation rock type has been detected.
 
-**Trigger condition:** `LithologyChange > 0.5` or `LithologyChanged > 0.5` (signal from detection algorithm).
+**Trigger condition:** `LithologyChange > 0.5` (signal from mahcine learning detection algorithm).
 
 **Actions:**
 1. Review current drilling parameters
 2. Adjust WOB and RPM for the new formation
 3. Monitor closely for the next few centimeters
-4. Update formation log if recording
 
 ---
 
@@ -151,5 +147,4 @@ This document describes all alarms that may appear on the alarm panel (left moni
 **Actions:**
 1. Drilling will stop automatically (in autonomous mode)
 2. Verify depth measurement accuracy
-3. Proceed with next planned operation
 4. Document final depth
