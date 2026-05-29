@@ -22,7 +22,7 @@ from .retrieve_embed import retrieve_embedded, EmbeddingChunk
 logger = logging.getLogger(__name__)
 
 # Cascade mode thresholds
-CASCADE_FTS_CONFIDENCE_THRESHOLD = 12.0  # If top FTS score >= this, skip embeddings
+CASCADE_FTS_CONFIDENCE_THRESHOLD = 20.0  # If top FTS score >= this, skip embeddings (raised to check documents more often)
 CASCADE_PARALLEL_TIMEOUT = 5.0  # Timeout for parallel queries in seconds
 
 

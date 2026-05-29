@@ -48,9 +48,10 @@ CACHE_MAX_SIZE = 64
 # CASCADE is recommended: FTS first (~10ms), adds embeddings only if FTS confidence is low
 # This gives operators seamless access to both FAQ and design documents.
 RETRIEVAL_MODE = RetrievalMode.CASCADE  # Smart routing - fast for FAQ, falls back to docs
-FTS_WEIGHT = 0.75  # Weight for curated FAQ results (higher = trust FAQ more)
-EMBED_WEIGHT = 0.25  # Weight for document results
-FINAL_CHUNK_LIMIT = 2  # Chunks to provide to LLM (more context for small models)
+FTS_WEIGHT = 0.5  # Weight for curated FAQ results
+EMBED_WEIGHT = 0.5  # Weight for document results (balanced with FAQ)
+FINAL_CHUNK_LIMIT = 4  # Chunks to provide to LLM (Ollama - limited context)
+FINAL_CHUNK_LIMIT_OPENAI = 8  # More chunks for OpenAI (larger context window)
 
 
 class AskRequest(BaseModel):
@@ -246,7 +247,8 @@ def health_check():
         "retrieval_mode": RETRIEVAL_MODE.value,
         "fts_weight": FTS_WEIGHT,
         "embed_weight": EMBED_WEIGHT,
-        "chunk_limit": FINAL_CHUNK_LIMIT,
+        "chunk_limit_ollama": FINAL_CHUNK_LIMIT,
+        "chunk_limit_openai": FINAL_CHUNK_LIMIT_OPENAI,
         "cache_enabled": CACHE_ENABLED,
         "cache_size": len(_response_cache),
         "cache_max": CACHE_MAX_SIZE,
@@ -351,15 +353,18 @@ def ask(req: AskRequest):
     # All modes except pure FTS use hybrid chunk format
     use_hybrid = effective_mode in (RetrievalMode.HYBRID, RetrievalMode.EMBED, RetrievalMode.CASCADE)
 
+    # Use higher chunk limit for OpenAI (larger context window)
+    chunk_limit = FINAL_CHUNK_LIMIT_OPENAI if req.provider == "openai" else FINAL_CHUNK_LIMIT
+
     if effective_mode == RetrievalMode.FTS:
-        chunks = retrieve_chunks(req.question, limit=FINAL_CHUNK_LIMIT)
+        chunks = retrieve_chunks(req.question, limit=chunk_limit)
     else:
         chunks = retrieve_hybrid(
             req.question,
             fts_weight=FTS_WEIGHT,
             embed_weight=EMBED_WEIGHT,
             mode=effective_mode,
-            final_limit=FINAL_CHUNK_LIMIT,
+            final_limit=chunk_limit,
         )
 
     retrieval_ms = (time.perf_counter() - retrieval_start) * 1000
