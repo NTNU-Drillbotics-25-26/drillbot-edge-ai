@@ -47,7 +47,7 @@ CACHE_MAX_SIZE = 64
 # Options: "fts" (FAQ only), "embed" (documents only), "hybrid" (both), "cascade" (smart)
 # CASCADE is recommended: FTS first (~10ms), adds embeddings only if FTS confidence is low
 # This gives operators seamless access to both FAQ and design documents.
-RETRIEVAL_MODE = RetrievalMode.CASCADE  # Smart routing - fast for FAQ, falls back to docs
+RETRIEVAL_MODE = RetrievalMode.EMBED  # Embedding-only retrieval
 FTS_WEIGHT = 0.5  # Weight for curated FAQ results
 EMBED_WEIGHT = 0.5  # Weight for document results (balanced with FAQ)
 FINAL_CHUNK_LIMIT = 4  # Chunks to provide to LLM (Ollama - limited context)
